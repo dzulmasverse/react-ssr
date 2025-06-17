@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import express from 'express'
+import path from "path";
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -35,6 +36,12 @@ if (!isProduction) {
 // Serve HTML
 app.use('*all', async (req, res) => {
   try {
+
+    // ! Favicon Fix
+    if (req.originalUrl === "/favicon.ico") {
+      return res.sendFile(path.resolve("./public/vite.svg"));
+    }
+
     const url = req.originalUrl.replace(base, '')
 
     /** @type {string} */
@@ -51,8 +58,7 @@ app.use('*all', async (req, res) => {
       render = (await import('./dist/server/entry-server.js')).render
     }
 
-    // const rendered = await render("/" + url)
-    const rendered = await render(url)
+    const rendered = await render(req.originalUrl)
 
     const html = template
       .replace(`<!--app-head-->`, rendered.head ?? '')
